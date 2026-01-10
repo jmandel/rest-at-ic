@@ -86,10 +86,22 @@ export class S3Backend {
     const path = this.getFilePath(fileType, name);
     const url = this.getUrl(path);
     
-    const response = await this.client.fetch(url);
+    let response: Response;
+    try {
+      response = await this.client.fetch(url);
+    } catch (err) {
+      const error = err as Error;
+      throw new Error(`Network error loading ${path}: ${error.message}`);
+    }
     
     if (!response.ok) {
-      throw new Error(`Failed to load ${path}: ${response.status} ${response.statusText}`);
+      let body = '';
+      try {
+        body = await response.text();
+      } catch {
+        // ignore
+      }
+      throw new Error(`Failed to load ${path}\nHTTP ${response.status} ${response.statusText}\nURL: ${url}${body ? `\nResponse: ${body.substring(0, 500)}` : ''}`);
     }
     
     const buffer = await response.arrayBuffer();
@@ -109,14 +121,26 @@ export class S3Backend {
     const url = this.getUrl(path);
     
     const end = offset + length - 1;
-    const response = await this.client.fetch(url, {
-      headers: {
-        Range: `bytes=${offset}-${end}`,
-      },
-    });
+    let response: Response;
+    try {
+      response = await this.client.fetch(url, {
+        headers: {
+          Range: `bytes=${offset}-${end}`,
+        },
+      });
+    } catch (err) {
+      const error = err as Error;
+      throw new Error(`Network error loading ${path} (range ${offset}-${end}): ${error.message}`);
+    }
     
     if (!response.ok && response.status !== 206) {
-      throw new Error(`Failed to load partial ${fileType}/${name}: ${response.status} ${response.statusText}`);
+      let body = '';
+      try {
+        body = await response.text();
+      } catch {
+        // ignore
+      }
+      throw new Error(`Failed to load ${path} (range ${offset}-${end})\nHTTP ${response.status} ${response.statusText}\nURL: ${url}${body ? `\nResponse: ${body.substring(0, 500)}` : ''}`);
     }
     
     const buffer = await response.arrayBuffer();
@@ -182,10 +206,22 @@ export class S3Backend {
         url = `${baseUrl.origin}?${params}`;
       }
       
-      const response = await this.client.fetch(url);
+      let response: Response;
+      try {
+        response = await this.client.fetch(url);
+      } catch (err) {
+        const error = err as Error;
+        throw new Error(`Network error listing ${fileType}: ${error.message}\nURL: ${url}`);
+      }
       
       if (!response.ok) {
-        throw new Error(`Failed to list ${fileType}: ${response.status} ${response.statusText}`);
+        let body = '';
+        try {
+          body = await response.text();
+        } catch {
+          // ignore
+        }
+        throw new Error(`Failed to list ${fileType}\nHTTP ${response.status} ${response.statusText}\nURL: ${url}${body ? `\nResponse: ${body.substring(0, 500)}` : ''}`);
       }
       
       const text = await response.text();

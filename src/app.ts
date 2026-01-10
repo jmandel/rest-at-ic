@@ -165,25 +165,7 @@ connectBtn.addEventListener('click', async () => {
     await loadSnapshots();
   } catch (err) {
     const error = err as Error;
-    let message = 'Connection failed';
-    let details = error.message;
-    
-    // Provide more helpful error messages
-    if (error.message.includes('Failed to load config')) {
-      message = 'Cannot access repository';
-      details = `Could not load repository config file.\n\nPossible causes:\n• Incorrect endpoint URL\n• Wrong bucket name\n• Invalid credentials\n• Bucket doesn't contain a restic repository\n• CORS not configured on the bucket\n\nOriginal error: ${error.message}`;
-    } else if (error.message.includes('MAC verification failed')) {
-      message = 'Wrong repository password';
-      details = 'The password you entered is incorrect, or the repository data is corrupted.';
-    } else if (error.message.includes('No key files found')) {
-      message = 'Not a restic repository';
-      details = 'No key files found in the repository. Make sure the bucket contains a valid restic repository.';
-    } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-      message = 'Network error';
-      details = `Could not connect to the S3 endpoint.\n\nPossible causes:\n• Endpoint URL is incorrect\n• Server is not reachable\n• CORS is blocking the request\n\nOriginal error: ${error.message}`;
-    }
-    
-    showError(connectError, message, details);
+    showError(connectError, 'Connection failed', error.message);
     console.error('Connection error:', err);
   } finally {
     connectBtn.disabled = false;
