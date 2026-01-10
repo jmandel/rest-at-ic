@@ -163,6 +163,10 @@ export function decodeConfig(encoded: string): ConfigState | null {
   }
 }
 
+// Prefix for encrypted configs - using '1' since base64 of JSON never starts with '1'
+// (JSON starts with '{' or '[' which encode to 'ey' or 'W' in base64)
+const ENCRYPTED_PREFIX = '1';
+
 /**
  * Encode config state with password encryption
  */
@@ -174,16 +178,16 @@ export async function encodeConfigEncrypted(state: ConfigState, password: string
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '');
-  // Prefix with 'e' to indicate encrypted
-  return 'e' + base64;
+  // Prefix with '1' to indicate encrypted
+  return ENCRYPTED_PREFIX + base64;
 }
 
 /**
  * Decode config state with password decryption
  */
 export async function decodeConfigEncrypted(encoded: string, password: string): Promise<ConfigState> {
-  // Remove 'e' prefix
-  const base64Part = encoded.substring(1);
+  // Remove prefix
+  const base64Part = encoded.substring(ENCRYPTED_PREFIX.length);
   // Restore standard base64
   let base64 = base64Part
     .replace(/-/g, '+')
@@ -197,10 +201,10 @@ export async function decodeConfigEncrypted(encoded: string, password: string): 
 }
 
 /**
- * Check if a hash value is encrypted (starts with 'e')
+ * Check if a hash value is encrypted (starts with '1')
  */
 export function isEncryptedHash(hash: string): boolean {
-  return hash.startsWith('e');
+  return hash.startsWith(ENCRYPTED_PREFIX);
 }
 
 /**
