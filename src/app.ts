@@ -86,14 +86,35 @@ function getFileIcon(node: Node): string {
   }
 }
 
-function showError(el: HTMLElement, message: string) {
-  el.textContent = message;
+function showError(el: HTMLElement, message: string, details?: string) {
+  if (details) {
+    el.innerHTML = `${escapeHtml(message)}<div class="error-details">${escapeHtml(details)}</div>`;
+  } else {
+    el.textContent = message;
+  }
   el.classList.remove('hidden');
 }
 
 function hideError(el: HTMLElement) {
   el.classList.add('hidden');
 }
+
+// Password visibility toggle
+document.querySelectorAll('.show-password-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const targetId = btn.getAttribute('data-target');
+    if (targetId) {
+      const input = document.getElementById(targetId) as HTMLInputElement;
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
+    }
+  });
+});
 
 function setLoading(el: HTMLElement, loading: boolean, message = 'Loading...') {
   if (loading) {
@@ -106,7 +127,7 @@ connectBtn.addEventListener('click', async () => {
   const endpoint = (document.getElementById('endpoint') as HTMLInputElement).value.trim();
   const bucket = (document.getElementById('bucket') as HTMLInputElement).value.trim();
   const prefix = (document.getElementById('prefix') as HTMLInputElement).value.trim();
-  const region = (document.getElementById('region') as HTMLInputElement).value.trim() || 'us-east-1';
+  const region = (document.getElementById('region') as HTMLInputElement).value.trim();
   const accessKeyId = (document.getElementById('accessKeyId') as HTMLInputElement).value.trim();
   const secretAccessKey = (document.getElementById('secretAccessKey') as HTMLInputElement).value.trim();
   const password = (document.getElementById('password') as HTMLInputElement).value;
@@ -125,7 +146,7 @@ connectBtn.addEventListener('click', async () => {
       endpoint,
       bucket,
       prefix: prefix || undefined,
-      region,
+      region: region || undefined,
       accessKeyId,
       secretAccessKey,
       usePathStyle: true,
@@ -143,8 +164,27 @@ connectBtn.addEventListener('click', async () => {
     // Load snapshots
     await loadSnapshots();
   } catch (err) {
-    showError(connectError, `Connection failed: ${(err as Error).message}`);
-    console.error(err);
+    const error = err as Error;
+    let message = 'Connection failed';
+    let details = error.message;
+    
+    // Provide more helpful error messages
+    if (error.message.includes('Failed to load config')) {
+      message = 'Cannot access repository';
+      details = `Could not load repository config file.\n\nPossible causes:\n• Incorrect endpoint URL\n• Wrong bucket name\n• Invalid credentials\n• Bucket doesn't contain a restic repository\n• CORS not configured on the bucket\n\nOriginal error: ${error.message}`;
+    } else if (error.message.includes('MAC verification failed')) {
+      message = 'Wrong repository password';
+      details = 'The password you entered is incorrect, or the repository data is corrupted.';
+    } else if (error.message.includes('No key files found')) {
+      message = 'Not a restic repository';
+      details = 'No key files found in the repository. Make sure the bucket contains a valid restic repository.';
+    } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+      message = 'Network error';
+      details = `Could not connect to the S3 endpoint.\n\nPossible causes:\n• Endpoint URL is incorrect\n• Server is not reachable\n• CORS is blocking the request\n\nOriginal error: ${error.message}`;
+    }
+    
+    showError(connectError, message, details);
+    console.error('Connection error:', err);
   } finally {
     connectBtn.disabled = false;
     connectBtn.textContent = 'Connect';
@@ -378,11 +418,11 @@ function getFormConfig(): RepoConfig {
     endpoint: (document.getElementById('endpoint') as HTMLInputElement).value.trim(),
     bucket: (document.getElementById('bucket') as HTMLInputElement).value.trim(),
     prefix: (document.getElementById('prefix') as HTMLInputElement).value.trim() || undefined,
-    region: (document.getElementById('region') as HTMLInputElement).value.trim() || 'us-east-1',
+    region: (document.getElementById('region') as HTMLInputElement).value.trim() || undefined,
     accessKeyId: (document.getElementById('accessKeyId') as HTMLInputElement).value.trim(),
     secretAccessKey: (document.getElementById('secretAccessKey') as HTMLInputElement).value.trim(),
     password: (document.getElementById('password') as HTMLInputElement).value,
-  };
+  } as RepoConfig;
 }
 
 // Populate form from RepoConfig
@@ -391,7 +431,7 @@ function setFormConfig(config: RepoConfig) {
   (document.getElementById('endpoint') as HTMLInputElement).value = config.endpoint || '';
   (document.getElementById('bucket') as HTMLInputElement).value = config.bucket || '';
   (document.getElementById('prefix') as HTMLInputElement).value = config.prefix || '';
-  (document.getElementById('region') as HTMLInputElement).value = config.region || 'us-east-1';
+  (document.getElementById('region') as HTMLInputElement).value = config.region || '';
   (document.getElementById('accessKeyId') as HTMLInputElement).value = config.accessKeyId || '';
   (document.getElementById('secretAccessKey') as HTMLInputElement).value = config.secretAccessKey || '';
   (document.getElementById('password') as HTMLInputElement).value = config.password || '';

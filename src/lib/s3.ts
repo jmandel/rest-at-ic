@@ -37,7 +37,7 @@ export class S3Backend {
     this.client = new AwsClient({
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
-      region: config.region || 'us-east-1',
+      region: config.region || 'auto', // 'auto' works for most S3-compatible services
       service: 's3', // Explicitly set service for non-AWS endpoints
     });
     this.bucket = config.bucket;

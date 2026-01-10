@@ -166,6 +166,6 @@ export interface S3Config {
   prefix?: string;
   accessKeyId: string;
   secretAccessKey: string;
-  region?: string;
+  region?: string;  // Optional - defaults to 'auto' which works for most S3-compatible services
   usePathStyle?: boolean;
 }

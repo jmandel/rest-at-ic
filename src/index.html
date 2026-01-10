@@ -104,6 +104,44 @@
       border-color: var(--accent-color);
     }
 
+    .password-input {
+      position: relative;
+      display: flex;
+    }
+
+    .password-input input {
+      flex: 1;
+      padding-right: 40px;
+    }
+
+    .show-password-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      padding: 4px 8px;
+      cursor: pointer;
+      opacity: 0.6;
+      font-size: 1em;
+    }
+
+    .show-password-btn:hover {
+      opacity: 1;
+    }
+
+    .error-details {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.85em;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
     .form-group.full-width {
       grid-column: 1 / -1;
     }
@@ -529,8 +567,8 @@
           <input type="text" id="prefix" placeholder="backups/">
         </div>
         <div class="form-group">
-          <label for="region">Region</label>
-          <input type="text" id="region" placeholder="us-east-1" value="us-east-1">
+          <label for="region">Region (optional)</label>
+          <input type="text" id="region" placeholder="auto">
         </div>
         <div class="form-group">
           <label for="accessKeyId">Access Key ID</label>
@@ -538,11 +576,17 @@
         </div>
         <div class="form-group">
           <label for="secretAccessKey">Secret Access Key</label>
-          <input type="password" id="secretAccessKey" placeholder="secret">
+          <div class="password-input">
+            <input type="password" id="secretAccessKey" placeholder="secret">
+            <button type="button" class="show-password-btn" data-target="secretAccessKey" title="Show/hide">👁️</button>
+          </div>
         </div>
         <div class="form-group full-width">
           <label for="password">Repository Password</label>
-          <input type="password" id="password" placeholder="Enter repository password">
+          <div class="password-input">
+            <input type="password" id="password" placeholder="Enter repository password">
+            <button type="button" class="show-password-btn" data-target="password" title="Show/hide">👁️</button>
+          </div>
         </div>
       </div>
       <div class="btn-row">

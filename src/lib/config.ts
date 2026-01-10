@@ -10,7 +10,7 @@ export interface RepoConfig {
   endpoint: string;
   bucket: string;
   prefix?: string;
-  region: string;
+  region?: string;  // Optional - defaults to 'auto'
   accessKeyId: string;
   secretAccessKey: string;
   password: string;
