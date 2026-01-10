@@ -83,6 +83,9 @@ export function ConfigManager() {
           <option key={name} value={name}>{name}</option>
         ))}
       </select>
+      <button className="icon-btn" onClick={handleSave} title="Save current config">
+        💾 Save
+      </button>
       <button className="icon-btn" onClick={handleLoad} title="Load selected config">
         📂 Load
       </button>
