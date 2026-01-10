@@ -172,11 +172,35 @@ button.secondary {
 
 .config-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid var(--border-color);
+}
+
+.config-actions label {
+  flex-shrink: 0;
+  font-size: 0.85em;
+  color: var(--text-secondary);
+}
+
+.config-input {
+  flex: 1;
+  min-width: 80px;
+  max-width: 150px;
+  padding: 6px 10px;
+  font-size: 0.85em;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-color);
+}
+
+.config-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
 }
 
 .config-select {
@@ -186,12 +210,34 @@ button.secondary {
   padding: 8px 12px;
   color: var(--text-color);
   font-size: 0.9em;
-  min-width: 150px;
+  flex: 1;
+  min-width: 120px;
+  max-width: 200px;
 }
 
 .config-select:focus {
   outline: none;
   border-color: var(--accent-color);
+}
+
+@media (max-width: 480px) {
+  .config-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .config-actions > * {
+    width: 100%;
+  }
+
+  .config-input,
+  .config-select {
+    max-width: none;
+  }
+
+  .config-actions .icon-btn {
+    justify-content: center;
+  }
 }
 
 .icon-btn {

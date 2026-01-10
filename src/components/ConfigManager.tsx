@@ -62,7 +62,7 @@ export function ConfigManager() {
 
   return (
     <div className="config-actions">
-      <label htmlFor="config-name" style={{ fontSize: '0.85em', color: 'var(--text-secondary)' }}>
+      <label htmlFor="config-name">
         Config:
       </label>
       <input
@@ -71,7 +71,7 @@ export function ConfigManager() {
         placeholder="default"
         value={configName}
         onChange={(e) => setField('configName', e.target.value)}
-        style={{ width: '120px', padding: '6px 10px', fontSize: '0.85em' }}
+        className="config-input"
       />
       <select
         className="config-select"
