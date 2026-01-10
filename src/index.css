@@ -428,9 +428,9 @@ button.secondary {
 
 /* File Browser */
 .browser {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .browser-path {
@@ -467,16 +467,17 @@ button.secondary {
 .file-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  max-height: 500px;
+  gap: 2px;
+  max-height: 60vh;
   overflow-y: auto;
 }
 
 .file-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 8px 14px;
   background: var(--bg-color);
   border-radius: 6px;
   cursor: pointer;
@@ -488,13 +489,13 @@ button.secondary {
 }
 
 .file-icon {
-  font-size: 1.2em;
-  width: 24px;
+  font-size: 1.1em;
+  width: 20px;
   text-align: center;
 }
 
 .file-name {
-  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -504,11 +505,24 @@ button.secondary {
   font-size: 0.85em;
   color: var(--text-secondary);
   font-family: monospace;
+  text-align: right;
+  min-width: 70px;
 }
 
 .file-time {
   font-size: 0.8em;
   color: var(--text-secondary);
+  min-width: 140px;
+  text-align: right;
+}
+
+@media (max-width: 600px) {
+  .file-item {
+    grid-template-columns: auto 1fr auto;
+  }
+  .file-time {
+    display: none;
+  }
 }
 
 /* Loading & Error States */
@@ -553,29 +567,42 @@ button.secondary {
   background: var(--bg-color);
   border-radius: 8px;
   padding: 16px;
+  margin-top: 8px;
 }
 
 .preview-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  gap: 16px;
+  margin-bottom: 12px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--border-color);
 }
 
+.preview-header strong {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .preview-info {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 8px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
   font-size: 0.9em;
 }
 
-.preview-info dt {
+.preview-field {
+  display: inline-block;
+}
+
+.preview-label {
   color: var(--text-secondary);
 }
 
-.preview-info dd {
+.preview-field:not(.preview-label) {
   font-family: monospace;
 }
 

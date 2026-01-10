@@ -46,14 +46,13 @@ export function PreviewPanel() {
           </button>
         )}
       </div>
-      <dl className="preview-info">
+      <div className="preview-info">
         {Object.entries(info).map(([key, value]) => (
-          <React.Fragment key={key}>
-            <dt>{key}</dt>
-            <dd>{value}</dd>
-          </React.Fragment>
+          <span key={key} className="preview-field">
+            <span className="preview-label">{key}:</span> {value}
+          </span>
         ))}
-      </dl>
+      </div>
     </div>
   );
 }
