@@ -91,7 +91,16 @@ export class S3Backend {
       response = await this.client.fetch(url);
     } catch (err) {
       const error = err as Error;
-      throw new Error(`Network error loading ${path}: ${error.message}`);
+      // Provide helpful context for common network errors
+      let hint = '';
+      if (error.message.includes('Failed to fetch')) {
+        hint = '\n\nPossible causes:\n' +
+          '• The endpoint URL is incorrect or unreachable\n' +
+          '• CORS is not configured on the S3 server\n' +
+          '• The server is not running or blocked by firewall\n' +
+          '• SSL/TLS certificate issues (try http:// instead of https://)';  
+      }
+      throw new Error(`Network error loading ${fileType}/${name}\nURL: ${url}\nError: ${error.message}${hint}`);
     }
     
     if (!response.ok) {
@@ -211,7 +220,15 @@ export class S3Backend {
         response = await this.client.fetch(url);
       } catch (err) {
         const error = err as Error;
-        throw new Error(`Network error listing ${fileType}: ${error.message}\nURL: ${url}`);
+        let hint = '';
+        if (error.message.includes('Failed to fetch')) {
+          hint = '\n\nPossible causes:\n' +
+            '• The endpoint URL is incorrect or unreachable\n' +
+            '• CORS is not configured on the S3 server\n' +
+            '• The server is not running or blocked by firewall\n' +
+            '• SSL/TLS certificate issues (try http:// instead of https://)';  
+        }
+        throw new Error(`Network error listing ${fileType}\nURL: ${url}\nError: ${error.message}${hint}`);
       }
       
       if (!response.ok) {
