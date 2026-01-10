@@ -2,7 +2,7 @@
  * Development server with live reload
  */
 
-import { readFileSync, existsSync } from 'fs';
+import { existsSync } from 'fs';
 import { join } from 'path';
 
 const PORT = 8000;
@@ -11,6 +11,7 @@ const mimeTypes: Record<string, string> = {
   '.html': 'text/html',
   '.js': 'application/javascript',
   '.ts': 'application/javascript',
+  '.tsx': 'application/javascript',
   '.css': 'text/css',
   '.json': 'application/json',
   '.png': 'image/png',
@@ -32,8 +33,8 @@ Bun.serve({
     
     const filePath = join(import.meta.dir, 'src', pathname);
     
-    // Handle TypeScript files - transpile on the fly
-    if (pathname.endsWith('.ts')) {
+    // Handle TypeScript/TSX files - transpile on the fly
+    if (pathname.endsWith('.ts') || pathname.endsWith('.tsx')) {
       try {
         const result = await Bun.build({
           entrypoints: [filePath],
@@ -53,7 +54,7 @@ Bun.serve({
           });
         } else {
           console.error('Build errors:', result.logs);
-          return new Response('Build failed', { status: 500 });
+          return new Response('Build failed: ' + result.logs.map(l => l.message).join('\n'), { status: 500 });
         }
       } catch (err) {
         console.error('Build error:', err);
