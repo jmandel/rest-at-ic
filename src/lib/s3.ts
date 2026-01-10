@@ -125,14 +125,22 @@ export class S3Backend {
       if (error.message.includes('Failed to fetch')) {
         hint = '\n\nThe browser blocked this request.' + diagnosis;
         if (isCrossOrigin) {
+          const origin = window.location.origin;
           hint += '\n\nThis is a CORS (Cross-Origin Resource Sharing) issue.';
-          hint += '\nThe S3 server must allow requests from: ' + window.location.origin;
-          hint += '\n\nRequired CORS configuration:';
-          hint += '\n• Allowed Origins: ' + window.location.origin;
-          hint += '\n• Allowed Methods: GET, HEAD';
-          hint += '\n• Allowed Headers: authorization, x-amz-date, x-amz-content-sha256, content-type, range';
-          hint += '\n• Expose Headers: content-length, content-range, etag';
-          hint += '\n\nBackblaze B2: Bucket Settings → CORS Rules → ensure "Allowed Headers" includes the x-amz-* headers above';
+          hint += '\n\nFor Backblaze B2, the web UI doesn\'t support all CORS options.';
+          hint += '\nYou must use the b2 CLI to set allowedHeaders:';
+          hint += '\n\nb2 bucket update <bucketName> allPublic --cors-rules \'[{';
+          hint += '\n  "corsRuleName": "resticBrowser",';
+          hint += '\n  "allowedOrigins": ["' + origin + '"],';
+          hint += '\n  "allowedOperations": ["s3_head", "s3_get"],';
+          hint += '\n  "allowedHeaders": ["authorization", "x-amz-*", "content-type", "range"],';
+          hint += '\n  "exposeHeaders": ["content-length", "content-range", "etag", "x-amz-*"],';
+          hint += '\n  "maxAgeSeconds": 3600';
+          hint += '\n}]\'';
+          hint += '\n\nFor other S3 providers, ensure CORS allows:';
+          hint += '\n• Origin: ' + origin;
+          hint += '\n• Methods: GET, HEAD';
+          hint += '\n• Headers: authorization, x-amz-*, content-type, range';
         } else {
           hint += '\n\nThe server may be down or unreachable.';
         }
