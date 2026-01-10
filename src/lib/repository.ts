@@ -157,51 +157,66 @@ export class Repository {
     if (this.indexLoaded) return;
 
     const indexFiles = await this.backend.list('index');
-    const superseded = new Set<string>();
-
-    // First pass: collect all superseded indexes
-    for (const indexId of indexFiles) {
-      try {
-        const data = await this.loadUnpacked('index', indexId);
-        const index: Index = JSON.parse(new TextDecoder().decode(data));
-        if (index.supersedes) {
-          for (const id of index.supersedes) {
-            superseded.add(id);
+    console.log(`Loading ${indexFiles.length} index files...`);
+    
+    // Load all index files in parallel
+    const BATCH_SIZE = 20; // Limit concurrent requests
+    const indexDataMap = new Map<string, Index>();
+    
+    for (let i = 0; i < indexFiles.length; i += BATCH_SIZE) {
+      const batch = indexFiles.slice(i, i + BATCH_SIZE);
+      const results = await Promise.all(
+        batch.map(async (indexId) => {
+          try {
+            const data = await this.loadUnpacked('index', indexId);
+            const index: Index = JSON.parse(new TextDecoder().decode(data));
+            return { indexId, index };
+          } catch (err) {
+            console.error(`Failed to load index ${indexId}:`, err);
+            return null;
           }
+        })
+      );
+      
+      for (const result of results) {
+        if (result) {
+          indexDataMap.set(result.indexId, result.index);
         }
-      } catch (err) {
-        console.error(`Failed to load index ${indexId}:`, err);
       }
     }
 
-    // Second pass: load all non-superseded indexes
-    for (const indexId of indexFiles) {
+    // Collect superseded indexes
+    const superseded = new Set<string>();
+    for (const index of indexDataMap.values()) {
+      if (index.supersedes) {
+        for (const id of index.supersedes) {
+          superseded.add(id);
+        }
+      }
+    }
+
+    // Process non-superseded indexes (already loaded, just parse)
+    for (const [indexId, index] of indexDataMap) {
       if (superseded.has(indexId)) continue;
 
-      try {
-        const data = await this.loadUnpacked('index', indexId);
-        const index: Index = JSON.parse(new TextDecoder().decode(data));
-
-        for (const pack of index.packs) {
-          const packId = idFromHex(pack.id);
-          
-          for (const blob of pack.blobs) {
-            const blobId = idFromHex(blob.id);
-            this.blobIndex.set(blob.id, {
-              id: blobId,
-              type: blob.type,
-              offset: blob.offset,
-              length: blob.length,
-              uncompressedLength: blob.uncompressed_length,
-              packId,
-            });
-          }
+      for (const pack of index.packs) {
+        const packId = idFromHex(pack.id);
+        
+        for (const blob of pack.blobs) {
+          const blobId = idFromHex(blob.id);
+          this.blobIndex.set(blob.id, {
+            id: blobId,
+            type: blob.type,
+            offset: blob.offset,
+            length: blob.length,
+            uncompressedLength: blob.uncompressed_length,
+            packId,
+          });
         }
-      } catch (err) {
-        console.error(`Failed to process index ${indexId}:`, err);
       }
     }
 
+    console.log(`Index loaded: ${this.blobIndex.size} blobs from ${indexDataMap.size - superseded.size} index files`);
     this.indexLoaded = true;
   }
 
