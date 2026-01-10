@@ -8,7 +8,10 @@ import {
   type RepoConfig,
   getActiveConfig,
   getConfigFromHash,
+  getHashInfo,
+  getEncryptedConfigFromHash,
   generateShareableUrl,
+  generateShareableUrlEncrypted,
   saveConfigToStorage,
   loadConfigsFromStorage,
   deleteConfigFromStorage,
@@ -35,6 +38,22 @@ const configNameInput = document.getElementById('config-name') as HTMLInputEleme
 const savedConfigsSelect = document.getElementById('saved-configs') as HTMLSelectElement;
 const loadConfigBtn = document.getElementById('load-config-btn')!;
 const deleteConfigBtn = document.getElementById('delete-config-btn')!;
+
+// Encryption modal elements
+const encryptModal = document.getElementById('encrypt-modal')!;
+const encryptPassword = document.getElementById('encrypt-password') as HTMLInputElement;
+const encryptPasswordConfirm = document.getElementById('encrypt-password-confirm') as HTMLInputElement;
+const encryptCheckbox = document.getElementById('encrypt-link-checkbox') as HTMLInputElement;
+const encryptError = document.getElementById('encrypt-error')!;
+const encryptCancelBtn = document.getElementById('encrypt-cancel-btn')!;
+const encryptConfirmBtn = document.getElementById('encrypt-confirm-btn')!;
+
+// Decryption modal elements
+const decryptModal = document.getElementById('decrypt-modal')!;
+const decryptPassword = document.getElementById('decrypt-password') as HTMLInputElement;
+const decryptError = document.getElementById('decrypt-error')!;
+const decryptCancelBtn = document.getElementById('decrypt-cancel-btn')!;
+const decryptConfirmBtn = document.getElementById('decrypt-confirm-btn')!;
 
 // App State
 let repo: Repository | null = null;
@@ -391,8 +410,8 @@ function updateSavedConfigsDropdown() {
   }
 }
 
-// Copy link button
-copyLinkBtn.addEventListener('click', async () => {
+// Copy link button - show encryption modal
+copyLinkBtn.addEventListener('click', () => {
   const config = getFormConfig();
   
   if (!config.endpoint || !config.bucket) {
@@ -400,20 +419,145 @@ copyLinkBtn.addEventListener('click', async () => {
     return;
   }
   
-  const url = generateShareableUrl(config);
+  // Reset modal state
+  encryptPassword.value = '';
+  encryptPasswordConfirm.value = '';
+  encryptCheckbox.checked = true;
+  encryptError.classList.add('hidden');
+  encryptModal.classList.remove('hidden');
+  encryptPassword.focus();
+});
+
+// Encrypt modal - cancel
+encryptCancelBtn.addEventListener('click', () => {
+  encryptModal.classList.add('hidden');
+});
+
+// Encrypt modal - confirm
+encryptConfirmBtn.addEventListener('click', async () => {
+  const config = getFormConfig();
+  const shouldEncrypt = encryptCheckbox.checked;
+  const password = encryptPassword.value;
+  const passwordConfirm = encryptPasswordConfirm.value;
+  
+  // Validation
+  if (shouldEncrypt) {
+    if (!password) {
+      encryptError.textContent = 'Please enter a password';
+      encryptError.classList.remove('hidden');
+      return;
+    }
+    if (password !== passwordConfirm) {
+      encryptError.textContent = 'Passwords do not match';
+      encryptError.classList.remove('hidden');
+      return;
+    }
+    if (password.length < 4) {
+      encryptError.textContent = 'Password must be at least 4 characters';
+      encryptError.classList.remove('hidden');
+      return;
+    }
+  }
+  
+  encryptError.classList.add('hidden');
+  encryptConfirmBtn.textContent = 'Generating...';
+  (encryptConfirmBtn as HTMLButtonElement).disabled = true;
   
   try {
-    await navigator.clipboard.writeText(url);
-    showToast('Link copied to clipboard!', 'success');
+    let url: string;
+    if (shouldEncrypt) {
+      url = await generateShareableUrlEncrypted(config, password);
+    } else {
+      url = generateShareableUrl(config);
+    }
+    
+    // Copy to clipboard
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // Fallback
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
+    
+    encryptModal.classList.add('hidden');
+    showToast(shouldEncrypt ? 'Encrypted link copied!' : 'Link copied!', 'success');
   } catch (err) {
-    // Fallback for older browsers
-    const textArea = document.createElement('textarea');
-    textArea.value = url;
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textArea);
-    showToast('Link copied to clipboard!', 'success');
+    encryptError.textContent = `Error: ${(err as Error).message}`;
+    encryptError.classList.remove('hidden');
+  } finally {
+    encryptConfirmBtn.textContent = 'Copy Link';
+    (encryptConfirmBtn as HTMLButtonElement).disabled = false;
+  }
+});
+
+// Close modal on overlay click
+encryptModal.addEventListener('click', (e) => {
+  if (e.target === encryptModal) {
+    encryptModal.classList.add('hidden');
+  }
+});
+
+// Decrypt modal handlers
+decryptCancelBtn.addEventListener('click', () => {
+  decryptModal.classList.add('hidden');
+  // Clear the hash since user cancelled
+  window.history.replaceState(null, '', window.location.pathname);
+});
+
+decryptConfirmBtn.addEventListener('click', async () => {
+  const password = decryptPassword.value;
+  
+  if (!password) {
+    decryptError.textContent = 'Please enter the password';
+    decryptError.classList.remove('hidden');
+    return;
+  }
+  
+  decryptError.classList.add('hidden');
+  decryptConfirmBtn.textContent = 'Decrypting...';
+  (decryptConfirmBtn as HTMLButtonElement).disabled = true;
+  
+  try {
+    const config = await getEncryptedConfigFromHash(password);
+    if (config.active && config.configs[config.active]) {
+      setFormConfig(config.configs[config.active]);
+      decryptModal.classList.add('hidden');
+      showToast('Configuration decrypted!', 'success');
+    } else {
+      throw new Error('Invalid configuration data');
+    }
+  } catch (err) {
+    decryptError.textContent = 'Incorrect password or corrupted data';
+    decryptError.classList.remove('hidden');
+  } finally {
+    decryptConfirmBtn.textContent = 'Decrypt';
+    (decryptConfirmBtn as HTMLButtonElement).disabled = false;
+  }
+});
+
+decryptModal.addEventListener('click', (e) => {
+  if (e.target === decryptModal) {
+    decryptModal.classList.add('hidden');
+    window.history.replaceState(null, '', window.location.pathname);
+  }
+});
+
+// Handle Enter key in decrypt modal
+decryptPassword.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    decryptConfirmBtn.click();
+  }
+});
+
+// Handle Enter key in encrypt modal
+encryptPasswordConfirm.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    encryptConfirmBtn.click();
   }
 });
 
@@ -465,13 +609,27 @@ deleteConfigBtn.addEventListener('click', () => {
 
 // Initialize on page load
 function initializeFromConfig() {
-  // First check URL hash
-  const hashConfig = getConfigFromHash();
-  if (hashConfig && hashConfig.active && hashConfig.configs[hashConfig.active]) {
-    const config = hashConfig.configs[hashConfig.active];
-    setFormConfig(config);
-    showToast(`Loaded config from URL: ${config.name}`, 'success');
+  const hashInfo = getHashInfo();
+  
+  // Check if we have an encrypted config in URL
+  if (hashInfo.hasConfig && hashInfo.isEncrypted) {
+    // Show decrypt modal
+    decryptPassword.value = '';
+    decryptError.classList.add('hidden');
+    decryptModal.classList.remove('hidden');
+    decryptPassword.focus();
     return;
+  }
+  
+  // Check for unencrypted config in URL
+  if (hashInfo.hasConfig) {
+    const hashConfig = getConfigFromHash();
+    if (hashConfig && hashConfig.active && hashConfig.configs[hashConfig.active]) {
+      const config = hashConfig.configs[hashConfig.active];
+      setFormConfig(config);
+      showToast(`Loaded config from URL: ${config.name}`, 'success');
+      return;
+    }
   }
   
   // Then check localStorage for active config

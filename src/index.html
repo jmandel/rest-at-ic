@@ -214,6 +214,73 @@
       }
     }
 
+    /* Modal styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      background: var(--surface-color);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .modal h3 {
+      margin-bottom: 16px;
+      color: var(--text-color);
+    }
+
+    .modal p {
+      font-size: 0.9em;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .modal .form-group {
+      margin-bottom: 16px;
+    }
+
+    .modal .btn-row {
+      margin-top: 20px;
+      justify-content: flex-end;
+    }
+
+    .modal .error-text {
+      color: var(--accent-color);
+      font-size: 0.85em;
+      margin-top: 8px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .checkbox-group label {
+      font-size: 0.9em;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
     /* Snapshots List */
     .snapshots-list {
       display: flex;
@@ -521,6 +588,48 @@
             <dl id="preview-info" class="preview-info"></dl>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for encrypted link password -->
+  <div id="encrypt-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3>🔐 Create Encrypted Link</h3>
+      <p>Enter a password to encrypt the shareable link. Anyone with the link will need this password to access the configuration.</p>
+      <div class="form-group">
+        <label for="encrypt-password">Link Password</label>
+        <input type="password" id="encrypt-password" placeholder="Enter encryption password">
+      </div>
+      <div class="form-group">
+        <label for="encrypt-password-confirm">Confirm Password</label>
+        <input type="password" id="encrypt-password-confirm" placeholder="Confirm password">
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="encrypt-link-checkbox" checked>
+        <label for="encrypt-link-checkbox">Encrypt the link (uncheck for plain link)</label>
+      </div>
+      <div id="encrypt-error" class="error-text hidden"></div>
+      <div class="btn-row">
+        <button id="encrypt-cancel-btn" class="secondary">Cancel</button>
+        <button id="encrypt-confirm-btn">Copy Link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for decrypting URL config -->
+  <div id="decrypt-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3>🔐 Encrypted Configuration</h3>
+      <p>This link contains an encrypted configuration. Enter the password to decrypt it.</p>
+      <div class="form-group">
+        <label for="decrypt-password">Link Password</label>
+        <input type="password" id="decrypt-password" placeholder="Enter decryption password">
+      </div>
+      <div id="decrypt-error" class="error-text hidden"></div>
+      <div class="btn-row">
+        <button id="decrypt-cancel-btn" class="secondary">Cancel</button>
+        <button id="decrypt-confirm-btn">Decrypt</button>
       </div>
     </div>
   </div>
