@@ -136,6 +136,82 @@
       display: flex;
       gap: 12px;
       margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .config-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .config-select {
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: var(--text-color);
+      font-size: 0.9em;
+      min-width: 150px;
+    }
+
+    .config-select:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    .icon-btn {
+      background: var(--primary-color);
+      border: none;
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: var(--text-color);
+      cursor: pointer;
+      font-size: 0.85em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: opacity 0.2s;
+    }
+
+    .icon-btn:hover {
+      opacity: 0.85;
+    }
+
+    .icon-btn.danger {
+      background: var(--accent-color);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      padding: 12px 24px;
+      border-radius: 8px;
+      color: var(--text-color);
+      z-index: 1000;
+      animation: fadeInUp 0.3s ease;
+    }
+
+    .toast.success {
+      border-color: var(--success-color);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
     }
 
     /* Snapshots List */
@@ -404,6 +480,17 @@
       </div>
       <div class="btn-row">
         <button id="connect-btn">Connect</button>
+        <button id="copy-link-btn" class="secondary" title="Copy shareable link with credentials">📋 Copy Link</button>
+        <button id="save-config-btn" class="secondary" title="Save configuration locally">💾 Save Config</button>
+      </div>
+      <div class="config-actions">
+        <label for="config-name" style="font-size: 0.85em; color: var(--text-secondary);">Config:</label>
+        <input type="text" id="config-name" placeholder="default" value="default" style="width: 120px; padding: 6px 10px; font-size: 0.85em;">
+        <select id="saved-configs" class="config-select">
+          <option value="">-- Saved Configs --</option>
+        </select>
+        <button id="load-config-btn" class="icon-btn" title="Load selected config">📂 Load</button>
+        <button id="delete-config-btn" class="icon-btn danger" title="Delete selected config">🗑️</button>
       </div>
       <div id="connect-error" class="error hidden"></div>
     </div>

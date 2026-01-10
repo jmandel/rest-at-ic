@@ -4,6 +4,15 @@
 
 import { Repository } from './lib/repository';
 import type { S3Config, SnapshotWithId, Node, Tree } from './lib/types';
+import {
+  type RepoConfig,
+  getActiveConfig,
+  getConfigFromHash,
+  generateShareableUrl,
+  saveConfigToStorage,
+  loadConfigsFromStorage,
+  deleteConfigFromStorage,
+} from './lib/config';
 
 // UI Elements
 const statusEl = document.getElementById('status')!;
@@ -20,6 +29,12 @@ const previewPanel = document.getElementById('preview-panel')!;
 const previewName = document.getElementById('preview-name')!;
 const previewInfo = document.getElementById('preview-info')!;
 const downloadBtn = document.getElementById('download-btn')!;
+const copyLinkBtn = document.getElementById('copy-link-btn')!;
+const saveConfigBtn = document.getElementById('save-config-btn')!;
+const configNameInput = document.getElementById('config-name') as HTMLInputElement;
+const savedConfigsSelect = document.getElementById('saved-configs') as HTMLSelectElement;
+const loadConfigBtn = document.getElementById('load-config-btn')!;
+const deleteConfigBtn = document.getElementById('delete-config-btn')!;
 
 // App State
 let repo: Repository | null = null;
@@ -324,40 +339,148 @@ function escapeHtml(text: string): string {
   return div.innerHTML;
 }
 
-// Load saved connection settings from localStorage
-function loadSavedSettings() {
-  const saved = localStorage.getItem('restic-browser-settings');
-  if (saved) {
-    try {
-      const settings = JSON.parse(saved);
-      (document.getElementById('endpoint') as HTMLInputElement).value = settings.endpoint || '';
-      (document.getElementById('bucket') as HTMLInputElement).value = settings.bucket || '';
-      (document.getElementById('prefix') as HTMLInputElement).value = settings.prefix || '';
-      (document.getElementById('region') as HTMLInputElement).value = settings.region || 'us-east-1';
-      (document.getElementById('accessKeyId') as HTMLInputElement).value = settings.accessKeyId || '';
-      // Don't save secrets
-    } catch (e) {
-      // Ignore
-    }
+// Toast notification
+function showToast(message: string, type: 'success' | 'info' = 'info') {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// Get current form values as RepoConfig
+function getFormConfig(): RepoConfig {
+  return {
+    name: configNameInput.value.trim() || 'default',
+    endpoint: (document.getElementById('endpoint') as HTMLInputElement).value.trim(),
+    bucket: (document.getElementById('bucket') as HTMLInputElement).value.trim(),
+    prefix: (document.getElementById('prefix') as HTMLInputElement).value.trim() || undefined,
+    region: (document.getElementById('region') as HTMLInputElement).value.trim() || 'us-east-1',
+    accessKeyId: (document.getElementById('accessKeyId') as HTMLInputElement).value.trim(),
+    secretAccessKey: (document.getElementById('secretAccessKey') as HTMLInputElement).value.trim(),
+    password: (document.getElementById('password') as HTMLInputElement).value,
+  };
+}
+
+// Populate form from RepoConfig
+function setFormConfig(config: RepoConfig) {
+  configNameInput.value = config.name || 'default';
+  (document.getElementById('endpoint') as HTMLInputElement).value = config.endpoint || '';
+  (document.getElementById('bucket') as HTMLInputElement).value = config.bucket || '';
+  (document.getElementById('prefix') as HTMLInputElement).value = config.prefix || '';
+  (document.getElementById('region') as HTMLInputElement).value = config.region || 'us-east-1';
+  (document.getElementById('accessKeyId') as HTMLInputElement).value = config.accessKeyId || '';
+  (document.getElementById('secretAccessKey') as HTMLInputElement).value = config.secretAccessKey || '';
+  (document.getElementById('password') as HTMLInputElement).value = config.password || '';
+}
+
+// Update saved configs dropdown
+function updateSavedConfigsDropdown() {
+  const configs = loadConfigsFromStorage();
+  savedConfigsSelect.innerHTML = '<option value="">-- Saved Configs --</option>';
+  
+  for (const name of Object.keys(configs.configs)) {
+    const option = document.createElement('option');
+    option.value = name;
+    option.textContent = name;
+    savedConfigsSelect.appendChild(option);
   }
 }
 
-// Save settings (excluding secrets)
-function saveSettings() {
-  const settings = {
-    endpoint: (document.getElementById('endpoint') as HTMLInputElement).value,
-    bucket: (document.getElementById('bucket') as HTMLInputElement).value,
-    prefix: (document.getElementById('prefix') as HTMLInputElement).value,
-    region: (document.getElementById('region') as HTMLInputElement).value,
-    accessKeyId: (document.getElementById('accessKeyId') as HTMLInputElement).value,
-  };
-  localStorage.setItem('restic-browser-settings', JSON.stringify(settings));
-}
-
-// Save on input change
-['endpoint', 'bucket', 'prefix', 'region', 'accessKeyId'].forEach(id => {
-  document.getElementById(id)?.addEventListener('change', saveSettings);
+// Copy link button
+copyLinkBtn.addEventListener('click', async () => {
+  const config = getFormConfig();
+  
+  if (!config.endpoint || !config.bucket) {
+    showToast('Please fill in endpoint and bucket first', 'info');
+    return;
+  }
+  
+  const url = generateShareableUrl(config);
+  
+  try {
+    await navigator.clipboard.writeText(url);
+    showToast('Link copied to clipboard!', 'success');
+  } catch (err) {
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea');
+    textArea.value = url;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    showToast('Link copied to clipboard!', 'success');
+  }
 });
 
-// Load saved settings on page load
-loadSavedSettings();
+// Save config button
+saveConfigBtn.addEventListener('click', () => {
+  const config = getFormConfig();
+  
+  if (!config.endpoint || !config.bucket) {
+    showToast('Please fill in endpoint and bucket first', 'info');
+    return;
+  }
+  
+  saveConfigToStorage(config);
+  updateSavedConfigsDropdown();
+  showToast(`Config "${config.name}" saved!`, 'success');
+});
+
+// Load config button
+loadConfigBtn.addEventListener('click', () => {
+  const selectedName = savedConfigsSelect.value;
+  if (!selectedName) {
+    showToast('Please select a config to load', 'info');
+    return;
+  }
+  
+  const configs = loadConfigsFromStorage();
+  const config = configs.configs[selectedName];
+  
+  if (config) {
+    setFormConfig(config);
+    showToast(`Config "${selectedName}" loaded!`, 'success');
+  }
+});
+
+// Delete config button
+deleteConfigBtn.addEventListener('click', () => {
+  const selectedName = savedConfigsSelect.value;
+  if (!selectedName) {
+    showToast('Please select a config to delete', 'info');
+    return;
+  }
+  
+  if (confirm(`Delete config "${selectedName}"?`)) {
+    deleteConfigFromStorage(selectedName);
+    updateSavedConfigsDropdown();
+    showToast(`Config "${selectedName}" deleted!`, 'success');
+  }
+});
+
+// Initialize on page load
+function initializeFromConfig() {
+  // First check URL hash
+  const hashConfig = getConfigFromHash();
+  if (hashConfig && hashConfig.active && hashConfig.configs[hashConfig.active]) {
+    const config = hashConfig.configs[hashConfig.active];
+    setFormConfig(config);
+    showToast(`Loaded config from URL: ${config.name}`, 'success');
+    return;
+  }
+  
+  // Then check localStorage for active config
+  const activeConfig = getActiveConfig();
+  if (activeConfig) {
+    setFormConfig(activeConfig);
+  }
+}
+
+// Update dropdown and load config on page load
+updateSavedConfigsDropdown();
+initializeFromConfig();
