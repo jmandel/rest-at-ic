@@ -91,14 +91,19 @@ export class S3Backend {
       response = await this.client.fetch(url);
     } catch (err) {
       const error = err as Error;
-      // Provide helpful context for common network errors
+      // "Failed to fetch" means the request never completed - usually CORS or network level
+      // The browser intentionally hides details for security reasons
       let hint = '';
       if (error.message.includes('Failed to fetch')) {
-        hint = '\n\nPossible causes:\n' +
-          '• The endpoint URL is incorrect or unreachable\n' +
-          '• CORS is not configured on the S3 server\n' +
-          '• The server is not running or blocked by firewall\n' +
-          '• SSL/TLS certificate issues (try http:// instead of https://)';  
+        const isCrossOrigin = !url.startsWith(window.location.origin);
+        hint = '\n\nThe browser blocked this request before receiving a response.';
+        if (isCrossOrigin) {
+          hint += '\n\nThis is likely a CORS issue. The S3 server must be configured to allow requests from: ' + window.location.origin;
+          hint += '\n\nFor Backblaze B2: Enable CORS in bucket settings with origin "' + window.location.origin + '"';
+          hint += '\nFor AWS S3: Add a CORS configuration to the bucket';
+          hint += '\nFor MinIO: Use `mc admin config set myminio api cors_allow_origin="' + window.location.origin + '"`';
+        }
+        hint += '\n\n→ Open browser DevTools (F12) → Network tab for more details';  
       }
       throw new Error(`Network error loading ${fileType}/${name}\nURL: ${url}\nError: ${error.message}${hint}`);
     }
@@ -222,11 +227,12 @@ export class S3Backend {
         const error = err as Error;
         let hint = '';
         if (error.message.includes('Failed to fetch')) {
-          hint = '\n\nPossible causes:\n' +
-            '• The endpoint URL is incorrect or unreachable\n' +
-            '• CORS is not configured on the S3 server\n' +
-            '• The server is not running or blocked by firewall\n' +
-            '• SSL/TLS certificate issues (try http:// instead of https://)';  
+          const isCrossOrigin = !url.startsWith(window.location.origin);
+          hint = '\n\nThe browser blocked this request before receiving a response.';
+          if (isCrossOrigin) {
+            hint += '\n\nThis is likely a CORS issue. The S3 server must be configured to allow requests from: ' + window.location.origin;
+            hint += '\n\n→ Open browser DevTools (F12) → Network tab for more details';  
+          }
         }
         throw new Error(`Network error listing ${fileType}\nURL: ${url}\nError: ${error.message}${hint}`);
       }
