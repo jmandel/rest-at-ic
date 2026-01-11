@@ -395,12 +395,14 @@ button.secondary {
 .snapshot-item {
   display: flex;
   align-items: center;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 12px 16px;
   padding: 14px 18px;
   background: var(--bg-color);
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.2s;
+  overflow: hidden;
 }
 
 .snapshot-item:hover {
@@ -438,7 +440,9 @@ button.secondary {
 
 .snapshot-tags {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
+  justify-content: flex-end;
 }
 
 .tag {
@@ -446,6 +450,7 @@ button.secondary {
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 0.75em;
+  white-space: nowrap;
 }
 
 /* File Browser */
