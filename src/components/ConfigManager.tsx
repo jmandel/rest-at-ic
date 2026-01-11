@@ -6,9 +6,23 @@ import {
   deleteConfigFromStorage,
 } from '../lib/config';
 
-export function ConfigManager() {
+interface ConfigManagerProps {
+  showCopyLink?: boolean;
+}
+
+export function ConfigManager({ showCopyLink = false }: ConfigManagerProps = {}) {
   const { configName, setField, loadConfig, getFormConfig } = useConnectionStore();
+  const { openEncryptModal } = useUIStore();
   const showToast = useUIStore((state) => state.showToast);
+
+  const handleCopyLink = () => {
+    const config = getFormConfig();
+    if (!config.endpoint || !config.bucket) {
+      showToast('Please fill in endpoint and bucket first', 'info');
+      return;
+    }
+    openEncryptModal();
+  };
   
   const [savedConfigs, setSavedConfigs] = useState<string[]>([]);
   const [selectedConfig, setSelectedConfig] = useState('');
@@ -91,6 +105,9 @@ export function ConfigManager() {
       </button>
       <button className="icon-btn danger" onClick={handleDelete} title="Delete selected config">
         🗑️
+      </button>
+      <button className="secondary" onClick={handleCopyLink} title="Copy shareable link with credentials">
+        📋 Copy Link
       </button>
     </div>
   );

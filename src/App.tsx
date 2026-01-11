@@ -7,6 +7,7 @@ import {
   EncryptModal,
   DecryptModal,
   ToastContainer,
+  ConfigManager,
 } from './components';
 import { useConnectionStore, useUIStore } from './store';
 import {
@@ -61,6 +62,9 @@ export function App() {
 
       {isConnected && (
         <>
+          <div className="card config-card">
+            <ConfigManager />
+          </div>
           <SnapshotList />
           <FileBrowser />
         </>
