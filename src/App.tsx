@@ -25,6 +25,8 @@ export function App() {
 
     // Check if we have an encrypted config in URL
     if (hashInfo.hasConfig && hashInfo.isEncrypted) {
+      // Don't clear hash yet - DecryptModal needs it
+      // It will be cleared after successful decryption or on cancel
       openDecryptModal();
       return;
     }
@@ -32,6 +34,11 @@ export function App() {
     // Check for unencrypted config in URL
     if (hashInfo.hasConfig) {
       const hashConfig = getConfigFromHash();
+      
+      // Clear the hash from URL/history immediately after reading
+      // to avoid leaving credentials visible in browser history
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      
       if (hashConfig && hashConfig.active && hashConfig.configs[hashConfig.active]) {
         const config = hashConfig.configs[hashConfig.active];
         loadConfig(config);

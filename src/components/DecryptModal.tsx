@@ -31,6 +31,9 @@ export function DecryptModal() {
     try {
       const config = await getEncryptedConfigFromHash(password);
       if (config.active && config.configs[config.active]) {
+        // Clear the hash from URL/history after successful decryption
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        
         loadConfig(config.configs[config.active]);
         setPassword('');
         closeDecryptModal();
