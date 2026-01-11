@@ -11,10 +11,21 @@ if (window.location.hash.startsWith('#c=')) {
   window.history.replaceState(null, '', window.location.pathname + window.location.search);
 }
 
-const container = document.getElementById('root');
-if (!container) {
-  throw new Error('Root element not found');
+// Wait for service worker to be ready before rendering
+// This ensures SW can intercept requests for demo mode
+async function init() {
+  // Wait for SW registration (defined in index.html)
+  if ((window as any).swReady) {
+    await (window as any).swReady;
+  }
+
+  const container = document.getElementById('root');
+  if (!container) {
+    throw new Error('Root element not found');
+  }
+
+  const root = createRoot(container);
+  root.render(<App />);
 }
 
-const root = createRoot(container);
-root.render(<App />);
+init();

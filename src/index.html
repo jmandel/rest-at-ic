@@ -9,21 +9,27 @@
 <body>
   <div id="root"></div>
   <script>
-    // Register service worker for demo mode (only if sw.js exists)
-    if ('serviceWorker' in navigator) {
-      fetch('/sw.js', { method: 'HEAD' })
-        .then(res => {
+    // Register service worker for demo mode
+    // Use relative path to work in subdirectories (e.g., GitHub Pages)
+    window.swReady = (async () => {
+      if ('serviceWorker' in navigator) {
+        try {
+          // Check if sw.js exists at current path
+          const swPath = new URL('sw.js', window.location.href).href;
+          const res = await fetch(swPath, { method: 'HEAD' });
           if (res.ok) {
-            return navigator.serviceWorker.register('/sw.js');
+            const reg = await navigator.serviceWorker.register(swPath);
+            console.log('Demo service worker registered', reg.scope);
+            // Wait for the service worker to be ready
+            await navigator.serviceWorker.ready;
+            return true;
           }
-        })
-        .then(reg => {
-          if (reg) console.log('Demo service worker registered', reg.scope);
-        })
-        .catch(() => {
+        } catch (e) {
           // Service worker not available - that's fine
-        });
-    }
+        }
+      }
+      return false;
+    })();
   </script>
   <script type="module" src="./frontend.tsx"></script>
 </body>
