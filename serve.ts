@@ -18,6 +18,7 @@ const mimeTypes: Record<string, string> = {
   '.jpg': 'image/jpeg',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
+  '.xml': 'application/xml',
 };
 
 Bun.serve({
@@ -64,13 +65,42 @@ Bun.serve({
     
     // Serve static files
     if (existsSync(filePath)) {
-      const ext = pathname.substring(pathname.lastIndexOf('.'));
+      const ext = pathname.substring(pathname.lastIndexOf('.')) || '';
       const contentType = mimeTypes[ext] || 'application/octet-stream';
       
       const file = Bun.file(filePath);
+      const fileSize = file.size;
+      
+      // Handle range requests for demo-repo files
+      const rangeHeader = req.headers.get('Range');
+      if (rangeHeader && pathname.startsWith('/demo-repo/')) {
+        const match = rangeHeader.match(/bytes=(\d+)-(\d*)/);
+        if (match) {
+          const start = parseInt(match[1], 10);
+          const end = match[2] ? parseInt(match[2], 10) : fileSize - 1;
+          const chunkSize = end - start + 1;
+          
+          const buffer = await file.arrayBuffer();
+          const chunk = buffer.slice(start, end + 1);
+          
+          return new Response(chunk, {
+            status: 206,
+            headers: {
+              'Content-Type': contentType,
+              'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+              'Content-Length': String(chunkSize),
+              'Accept-Ranges': 'bytes',
+              'Cache-Control': 'no-cache',
+            },
+          });
+        }
+      }
+      
       return new Response(file, {
         headers: {
           'Content-Type': contentType,
+          'Content-Length': String(fileSize),
+          'Accept-Ranges': 'bytes',
           'Cache-Control': 'no-cache',
         },
       });

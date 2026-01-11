@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <Name>demo-repo</Name>
+  <Prefix>keys/</Prefix>
+  <IsTruncated>false</IsTruncated>
+  <Contents><Key>keys/4e1e311c4856167471191400c5fc8b8dcfe851a71135f8234f5d8a656f6d5fd8</Key></Contents>
+</ListBucketResult>

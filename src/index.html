@@ -8,6 +8,23 @@
 </head>
 <body>
   <div id="root"></div>
+  <script>
+    // Register service worker for demo mode (only if sw.js exists)
+    if ('serviceWorker' in navigator) {
+      fetch('/sw.js', { method: 'HEAD' })
+        .then(res => {
+          if (res.ok) {
+            return navigator.serviceWorker.register('/sw.js');
+          }
+        })
+        .then(reg => {
+          if (reg) console.log('Demo service worker registered', reg.scope);
+        })
+        .catch(() => {
+          // Service worker not available - that's fine
+        });
+    }
+  </script>
   <script type="module" src="./frontend.tsx"></script>
 </body>
 </html>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <Name>demo-repo</Name>
+  <Prefix>index/</Prefix>
+  <IsTruncated>false</IsTruncated>
+  <Contents><Key>index/2cc2903fb80cb910f64f56eff2f9062b66c822eaa7a7e7394f35bd81d22635fc</Key></Contents>
+  <Contents><Key>index/306030bbfa8045cf1ef58519318524d92fa26b47c0e4728ca485cd794527cafc</Key></Contents>
+  <Contents><Key>index/6db281dbbd25044cd89076773c2d503ee19e9de1e91119b0d0175c2f09182fa9</Key></Contents>
+  <Contents><Key>index/76a8af037d195a2887197d2e7e03f117b5485b90e3326339c2721134a00f205b</Key></Contents>
+</ListBucketResult>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <Name>demo-repo</Name>
+  <Prefix>snapshots/</Prefix>
+  <IsTruncated>false</IsTruncated>
+  <Contents><Key>snapshots/210f74e77c2625cc497131dd8fc9c106d2fc283876f6774c9916001330b02ab4</Key></Contents>
+  <Contents><Key>snapshots/34cb0293db794f0d5532990ea8543db17159406898b5061477c79e9a07059abc</Key></Contents>
+  <Contents><Key>snapshots/4a93b4ba5be9ab29efdda5798d35b013d4edc26958e0fa43a6e2a187e7044cfb</Key></Contents>
+  <Contents><Key>snapshots/d7e5c79770b0b2bfe726f9cc7f6daa4e5c858d9f927053cf0d76bd13a3f39cf8</Key></Contents>
+</ListBucketResult>
