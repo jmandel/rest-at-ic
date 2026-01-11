@@ -7,11 +7,11 @@ import {
 } from '../lib/config';
 
 interface ConfigManagerProps {
-  showCopyLink?: boolean;
+  connected?: boolean;
 }
 
-export function ConfigManager({ showCopyLink = false }: ConfigManagerProps = {}) {
-  const { configName, setField, loadConfig, getFormConfig } = useConnectionStore();
+export function ConfigManager({ connected = false }: ConfigManagerProps) {
+  const { configName, setField, loadConfig, getFormConfig, isConnected } = useConnectionStore();
   const { openEncryptModal } = useUIStore();
   const showToast = useUIStore((state) => state.showToast);
 
@@ -74,6 +74,32 @@ export function ConfigManager({ showCopyLink = false }: ConfigManagerProps = {})
     }
   };
 
+  // When connected, show a simplified view
+  if (connected) {
+    return (
+      <div className="config-actions">
+        <label htmlFor="config-name">
+          Save as:
+        </label>
+        <input
+          type="text"
+          id="config-name"
+          placeholder="my-config"
+          value={configName}
+          onChange={(e) => setField('configName', e.target.value)}
+          className="config-input"
+        />
+        <button className="icon-btn" onClick={handleSave} title="Save current connection">
+          💾 Save
+        </button>
+        <button className="secondary" onClick={handleCopyLink} title="Copy shareable link">
+          📋 Copy Link
+        </button>
+      </div>
+    );
+  }
+
+  // When not connected, show full config management
   return (
     <div className="config-actions">
       <label htmlFor="config-name">
@@ -82,7 +108,7 @@ export function ConfigManager({ showCopyLink = false }: ConfigManagerProps = {})
       <input
         type="text"
         id="config-name"
-        placeholder="default"
+        placeholder="my-config"
         value={configName}
         onChange={(e) => setField('configName', e.target.value)}
         className="config-input"
@@ -105,9 +131,6 @@ export function ConfigManager({ showCopyLink = false }: ConfigManagerProps = {})
       </button>
       <button className="icon-btn danger" onClick={handleDelete} title="Delete selected config">
         🗑️
-      </button>
-      <button className="secondary" onClick={handleCopyLink} title="Copy shareable link with credentials">
-        📋 Copy Link
       </button>
     </div>
   );

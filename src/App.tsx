@@ -63,7 +63,7 @@ export function App() {
       {isConnected && (
         <>
           <div className="card config-card">
-            <ConfigManager />
+            <ConfigManager connected />
           </div>
           <SnapshotList />
           <FileBrowser />
