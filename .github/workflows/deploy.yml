@@ -38,6 +38,9 @@ jobs:
           cp src/index.html dist/
           cp src/index.css dist/
           
+          # Copy demo files (service worker and demo repository)
+          cp -r demo/* dist/
+          
           # Update index.html to reference built files
           sed -i 's|./frontend.tsx|./frontend.js|g' dist/index.html
 
