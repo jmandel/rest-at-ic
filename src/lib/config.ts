@@ -207,11 +207,22 @@ export function isEncryptedHash(hash: string): boolean {
   return hash.startsWith(ENCRYPTED_PREFIX);
 }
 
+// Captured hash from initial page load (cleared from URL immediately)
+let capturedHash: string | null = null;
+
+/**
+ * Set the captured hash (called from frontend.tsx before URL is cleared)
+ */
+export function setCapturedHash(hash: string) {
+  capturedHash = hash;
+}
+
 /**
  * Get config from URL hash (returns info about encryption status)
+ * Uses captured hash if available, otherwise falls back to window.location.hash
  */
 export function getHashInfo(): { hasConfig: boolean; isEncrypted: boolean; encoded: string } {
-  const hash = window.location.hash;
+  const hash = capturedHash ?? window.location.hash;
   if (!hash || !hash.startsWith('#c=')) {
     return { hasConfig: false, isEncrypted: false, encoded: '' };
   }
@@ -221,6 +232,13 @@ export function getHashInfo(): { hasConfig: boolean; isEncrypted: boolean; encod
     isEncrypted: isEncryptedHash(encoded),
     encoded,
   };
+}
+
+/**
+ * Clear the captured hash after it's been used
+ */
+export function clearCapturedHash() {
+  capturedHash = null;
 }
 
 /**

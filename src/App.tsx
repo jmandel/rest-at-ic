@@ -13,6 +13,7 @@ import {
   getHashInfo,
   getConfigFromHash,
   getActiveConfig,
+  clearCapturedHash,
 } from './lib/config';
 
 export function App() {
@@ -20,13 +21,13 @@ export function App() {
   const { openDecryptModal, showToast } = useUIStore();
 
   // Initialize from URL hash or localStorage on mount
+  // Note: Hash is already cleared from URL in frontend.tsx, but captured for use here
   useEffect(() => {
     const hashInfo = getHashInfo();
 
     // Check if we have an encrypted config in URL
     if (hashInfo.hasConfig && hashInfo.isEncrypted) {
-      // Don't clear hash yet - DecryptModal needs it
-      // It will be cleared after successful decryption or on cancel
+      // DecryptModal will clear captured hash after use
       openDecryptModal();
       return;
     }
@@ -34,10 +35,8 @@ export function App() {
     // Check for unencrypted config in URL
     if (hashInfo.hasConfig) {
       const hashConfig = getConfigFromHash();
-      
-      // Clear the hash from URL/history immediately after reading
-      // to avoid leaving credentials visible in browser history
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      // Clear captured hash now that we've read it
+      clearCapturedHash();
       
       if (hashConfig && hashConfig.active && hashConfig.configs[hashConfig.active]) {
         const config = hashConfig.configs[hashConfig.active];

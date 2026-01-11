@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal } from './Modal';
 import { useUIStore, useConnectionStore } from '../store';
-import { getEncryptedConfigFromHash } from '../lib/config';
+import { getEncryptedConfigFromHash, clearCapturedHash } from '../lib/config';
 
 export function DecryptModal() {
   const { decryptModalOpen, closeDecryptModal, showToast } = useUIStore();
@@ -15,8 +15,8 @@ export function DecryptModal() {
     setPassword('');
     setError('');
     closeDecryptModal();
-    // Clear the hash since user cancelled
-    window.history.replaceState(null, '', window.location.pathname);
+    // Clear captured hash since user cancelled
+    clearCapturedHash();
   };
 
   const handleSubmit = async () => {
@@ -31,8 +31,8 @@ export function DecryptModal() {
     try {
       const config = await getEncryptedConfigFromHash(password);
       if (config.active && config.configs[config.active]) {
-        // Clear the hash from URL/history after successful decryption
-        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        // Clear captured hash after successful decryption
+        clearCapturedHash();
         
         loadConfig(config.configs[config.active]);
         setPassword('');
