@@ -32,7 +32,13 @@ Bun.serve({
       pathname = '/index.html';
     }
     
-    const filePath = join(import.meta.dir, 'src', pathname);
+    // Check demo/ directory first for demo-repo and sw.js
+    let filePath: string;
+    if (pathname.startsWith('/demo-repo/') || pathname === '/sw.js') {
+      filePath = join(import.meta.dir, 'demo', pathname);
+    } else {
+      filePath = join(import.meta.dir, 'src', pathname);
+    }
     
     // Handle TypeScript/TSX files - transpile on the fly
     if (pathname.endsWith('.ts') || pathname.endsWith('.tsx')) {
