@@ -4,6 +4,8 @@ A browser-based viewer for [restic](https://restic.net/) backup repositories sto
 
 Browse your restic backups directly in the browser without needing to install restic locally.
 
+**[▶ Try the Live Demo](https://joshuamandel.com/rest-at-ic/#c=eyJjb25maWdzIjp7ImRlbW8iOnsibmFtZSI6IkRlbW8iLCJlbmRwb2ludCI6Imh0dHBzOi8vam9zaHVhbWFuZGVsLmNvbS9yZXN0LWF0LWljIiwiYnVja2V0IjoiZGVtby1yZXBvIiwicHJlZml4IjoiIiwiYWNjZXNzS2V5SWQiOiJkZW1vIiwic2VjcmV0QWNjZXNzS2V5IjoiZGVtbyIsInBhc3N3b3JkIjoiZGVtbyJ9fSwiYWN0aXZlIjoiZGVtbyJ9)** — Click "Connect" to browse a sample repository
+
 ## Features
 
 - **S3-compatible backend support** - Works with AWS S3, Backblaze B2, MinIO, and other S3-compatible storage
