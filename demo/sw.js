@@ -18,15 +18,21 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
-  // Only intercept S3 list-type requests
-  if (url.searchParams.has('list-type')) {
+  // Only intercept requests to our own origin AND to the demo-repo path
+  // This prevents intercepting real S3 requests to other backends
+  if (url.origin !== self.location.origin) {
+    return; // Let cross-origin requests pass through
+  }
+  
+  // Only intercept requests that look like demo-repo list requests
+  if (url.searchParams.has('list-type') && url.pathname.includes('demo-repo')) {
     const prefix = url.searchParams.get('prefix') || '';
     // prefix is like "keys/" or "snapshots/" or "index/"
     const type = prefix.replace(/\/$/, '');
     
     if (type) {
       // Construct path to manifest XML
-      // url.pathname is like "/demo-repo" 
+      // url.pathname is like "/demo-repo" or "/rest-at-ic/demo-repo"
       const manifestUrl = `${url.origin}${url.pathname}/_manifest/${type}.xml`;
       console.log(`[SW] List request for ${prefix} -> ${manifestUrl}`);
       
@@ -46,5 +52,5 @@ self.addEventListener('fetch', (event) => {
   }
   
   // All other requests pass through normally
-  // This includes file fetches, range requests, etc.
+  // This includes file fetches, range requests, real S3 requests, etc.
 });
